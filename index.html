@@ -75,10 +75,7 @@
                 Mulai Kontribusi <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
             </button>
             
-            <div class="text-xs text-slate-400 mt-4 flex justify-center items-center gap-2">
-                <i data-lucide="scan-face" class="w-4 h-4"></i>
-                <span id="ai-status-text">Memuat AI Hand Tracking...</span>
-            </div>
+            <!-- STATUS AI DIHILANGKAN DARI SINI SESUAI PERMINTAAN -->
         </div>
     </div>
 
@@ -275,7 +272,7 @@
         const els = {
             inputName: document.getElementById('input-contributor'),
             introError: document.getElementById('intro-error'),
-            aiStatus: document.getElementById('ai-status-text'),
+            // aiStatus REMOVED (Sudah dihapus dari HTML)
             
             progressBar: document.getElementById('progress-bar'),
             stepCounter: document.getElementById('step-counter'),
@@ -328,19 +325,16 @@
                 
                 hands.setOptions({
                     maxNumHands: 2,
-                    modelComplexity: 1,
+                    modelComplexity: 0, // UBAH KE 0 (LITE) AGAR LEBIH CEPAT DI BROWSER/HP
                     minDetectionConfidence: 0.5,
                     minTrackingConfidence: 0.5
                 });
                 
                 hands.onResults(onResults);
                 isAiReady = true;
-                els.aiStatus.innerText = "AI Hand Tracking Siap";
-                els.aiStatus.classList.add("text-emerald-600", "font-medium");
+                // UI update untuk AI Status dihapus
             } catch (err) {
                 console.error("MediaPipe Error:", err);
-                els.aiStatus.innerText = "Gagal memuat AI (Cek Koneksi)";
-                els.aiStatus.classList.add("text-red-500");
             }
 
             // Show Intro
@@ -477,14 +471,20 @@
 
         els.btnEnableCam.addEventListener('click', startCamera);
 
-        // AI Loop
+        // AI Loop (OPTIMIZED)
+        let isProcessingAi = false;
+
         async function predictLoop() {
-            // Hanya prediksi jika live container terlihat (tidak sedang memutar video hasil)
+            // Hanya prediksi jika live container terlihat dan tidak sedang memproses frame sebelumnya
             if (stream && isRigging && els.videoPreview.readyState >= 2 && !els.liveContainer.classList.contains('hidden')) {
-                try {
-                    await hands.send({image: els.videoPreview});
-                } catch(e) { 
-                    // Silent catch untuk mencegah console spam saat proses inisialisasi
+                if (!isProcessingAi) {
+                    isProcessingAi = true;
+                    try {
+                        await hands.send({image: els.videoPreview});
+                    } catch(e) { 
+                        // Silent catch
+                    }
+                    isProcessingAi = false;
                 }
             }
             // Loop terus berjalan
