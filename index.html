@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Isyarasa Collector - Dataset Berurutan</title>
+    <title>Isyarasa - Dataset Berurutan</title>
     
     <!-- 1. Framework & Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,15 +21,21 @@
         body { font-family: 'Inter', sans-serif; }
         .scale-x-flipped { transform: scaleX(-1); }
         .hidden { display: none !important; }
+        
+        /* Loader warna Hijau Pastel */
         .loader {
             border: 3px solid #f3f3f3;
             border-radius: 50%;
-            border-top: 3px solid #4f46e5;
+            border-top: 3px solid #34d399; /* Emerald-400 (Pastel Green) */
             width: 20px;
             height: 20px;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Progress bar animasi untuk limit 5 detik */
+        @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+        .limit-bar { animation: shrink 5s linear forwards; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
@@ -43,23 +49,29 @@
     <!-- SCREEN 2: INTRO (NAMA) -->
     <div id="screen-intro" class="hidden fixed inset-0 bg-slate-50 flex items-center justify-center z-40 p-4">
         <div class="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center space-y-6">
-            <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <i data-lucide="video" class="w-10 h-10 text-indigo-600"></i>
+            
+            <!-- LOGO UTAMA -->
+            <div class="w-32 h-32 mx-auto mb-2 flex items-center justify-center">
+                <img src="https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/logo%20(1).png" 
+                     alt="Logo Isyarasa" 
+                     class="w-full h-full object-contain">
             </div>
+
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">Isyarasa Collector</h1>
-                <p class="text-slate-500 mt-2">Bantu kami mengumpulkan data gerakan bahasa isyarat untuk AI.</p>
+                <h1 class="text-3xl font-bold text-slate-800">Isyarasa</h1>
+                <p class="text-slate-500 mt-2">Mohon bantuan Anda untuk berpartisipasi dalam pengumpulan data gerakan bahasa isyarat.</p>
             </div>
             
             <div class="text-left space-y-2">
                 <label class="text-sm font-semibold text-slate-700">Siapa Nama Anda?</label>
                 <input type="text" id="input-contributor" 
-                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none transition"
                     placeholder="Masukkan nama atau inisial">
                 <p id="intro-error" class="text-red-500 text-sm hidden"></p>
             </div>
 
-            <button id="btn-start-session" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition flex items-center justify-center">
+            <!-- Tombol Hijau Pastel (Emerald-400) -->
+            <button id="btn-start-session" class="w-full bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition flex items-center justify-center shadow-lg shadow-emerald-100">
                 Mulai Kontribusi <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
             </button>
             
@@ -74,7 +86,7 @@
     <div id="screen-completed" class="hidden fixed inset-0 bg-slate-50 flex items-center justify-center z-40 p-4">
         <div class="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center space-y-6 animate-in zoom-in duration-300">
             <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <i data-lucide="trophy" class="w-10 h-10 text-green-600"></i>
+                <i data-lucide="trophy" class="w-10 h-10 text-green-500"></i>
             </div>
             <div>
                 <h1 class="text-2xl font-bold text-slate-800">Selesai! Terima Kasih</h1>
@@ -94,7 +106,8 @@
         <!-- Top Progress Bar -->
         <div class="bg-white shadow-sm sticky top-0 z-30">
             <div class="h-1 bg-slate-200 w-full">
-                <div id="progress-bar" class="h-full bg-indigo-600 transition-all duration-500" style="width: 0%"></div>
+                <!-- Progress Bar Hijau Pastel -->
+                <div id="progress-bar" class="h-full bg-emerald-400 transition-all duration-500" style="width: 0%"></div>
             </div>
             <div class="container mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center">
@@ -119,7 +132,8 @@
                 <div class="space-y-4 flex flex-col">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 h-full flex flex-col">
                         <h3 class="font-bold text-slate-700 mb-2 flex items-center">
-                            <i data-lucide="play" class="w-4 h-4 mr-2 text-indigo-500"></i> Contoh Gerakan
+                            <!-- Icon Hijau Pastel -->
+                            <i data-lucide="play" class="w-4 h-4 mr-2 text-emerald-500"></i> Contoh Gerakan
                         </h3>
                         <div class="relative aspect-video bg-black rounded-lg overflow-hidden flex-1 group">
                             <video id="video-reference" class="w-full h-full object-contain" autoplay loop muted playsinline></video>
@@ -139,7 +153,8 @@
                             <h3 class="font-bold text-slate-700 flex items-center">
                                 <i data-lucide="camera" class="w-4 h-4 mr-2 text-red-500"></i> Kamera Anda
                             </h3>
-                            <button id="btn-toggle-rig" class="hidden text-xs text-indigo-600 hover:underline flex items-center">
+                            <!-- Link Hijau Pastel -->
+                            <button id="btn-toggle-rig" class="hidden text-xs text-emerald-500 hover:underline flex items-center">
                                 <i data-lucide="scan-face" class="w-3 h-3 mr-1"></i>
                                 <span id="rig-text">Sembunyikan Rig</span>
                             </button>
@@ -159,6 +174,11 @@
                             <div id="live-container" class="relative w-full h-full transform scale-x-flipped hidden">
                                 <video id="video-preview" class="absolute inset-0 w-full h-full object-cover" autoplay muted playsinline></video>
                                 <canvas id="canvas-rig" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+                                
+                                <!-- Progress Bar 5 Detik -->
+                                <div id="limit-progress-container" class="hidden absolute top-0 left-0 w-full h-1 bg-white/30 z-50">
+                                    <div id="limit-progress-bar" class="h-full bg-red-500 w-full"></div>
+                                </div>
                             </div>
 
                             <!-- 3. Playback Result -->
@@ -179,7 +199,7 @@
                         <div class="mt-4 flex gap-3">
                             <!-- RECORD BTN -->
                             <button id="btn-record" class="hidden flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold shadow transition flex items-center justify-center">
-                                <div class="w-3 h-3 bg-white rounded-full mr-2"></div> Rekam
+                                <div class="w-3 h-3 bg-white rounded-full mr-2"></div> Rekam (Maks 5 Detik)
                             </button>
 
                             <!-- STOP BTN -->
@@ -192,7 +212,8 @@
                                 <button id="btn-retry" class="flex-1 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-3 rounded-lg font-bold transition flex items-center justify-center">
                                     <i data-lucide="refresh-ccw" class="w-4 h-4 mr-2"></i> Ulang
                                 </button>
-                                <button id="btn-upload" class="flex-[3] bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow transition flex items-center justify-center">
+                                <!-- Tombol Lanjut Hijau Pastel -->
+                                <button id="btn-upload" class="flex-[3] bg-emerald-400 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold shadow transition flex items-center justify-center">
                                     <i data-lucide="upload-cloud" class="w-4 h-4 mr-2"></i> Lanjut
                                 </button>
                             </div>
@@ -230,10 +251,14 @@
         let currentIndex = 0;
         let contributorName = "";
         
+        // Simpan rekaman per kata
+        let recordings = {}; 
+
         let stream = null;
         let mediaRecorder = null;
         let recordedChunks = [];
         let videoBlob = null;
+        let recordingTimeout = null; // Timeout untuk 5 detik
         
         let hands = null; // MediaPipe Hands
         let isRigging = true;
@@ -266,6 +291,9 @@
             
             recIndicator: document.getElementById('rec-indicator'),
             aiLoading: document.getElementById('ai-loading-label'),
+            limitProgressContainer: document.getElementById('limit-progress-container'),
+            limitProgressBar: document.getElementById('limit-progress-bar'),
+
             btnToggleRig: document.getElementById('btn-toggle-rig'),
             rigText: document.getElementById('rig-text'),
             
@@ -308,7 +336,7 @@
                 hands.onResults(onResults);
                 isAiReady = true;
                 els.aiStatus.innerText = "AI Hand Tracking Siap";
-                els.aiStatus.classList.add("text-green-600", "font-medium");
+                els.aiStatus.classList.add("text-emerald-600", "font-medium");
             } catch (err) {
                 console.error("MediaPipe Error:", err);
                 els.aiStatus.innerText = "Gagal memuat AI (Cek Koneksi)";
@@ -356,10 +384,28 @@
             // Update Reference Video
             els.videoRef.src = word.url;
             
-            // Reset UI State for new recording
-            resetRecordingState();
+            // Cek apakah sudah ada rekaman untuk kata ini
+            if (recordings[index]) {
+                // Tampilkan video yang tersimpan
+                videoBlob = recordings[index];
+                const url = URL.createObjectURL(videoBlob);
+                
+                els.liveContainer.classList.add('hidden');
+                els.videoPlayback.src = url;
+                els.videoPlayback.classList.remove('hidden');
+                
+                // Atur tombol ke mode review
+                els.recIndicator.classList.add('hidden');
+                els.btnStop.classList.add('hidden');
+                els.btnRecord.classList.add('hidden'); // Sembunyikan tombol rekam
+                els.reviewActions.classList.remove('hidden');
+                els.camOverlay.classList.add('hidden');
+            } else {
+                // Belum ada rekaman, reset ke mode kamera
+                resetRecordingState();
+            }
             
-            // Handle Buttons
+            // Handle Nav Buttons
             if (index > 0) els.btnPrev.classList.remove('hidden');
             else els.btnPrev.classList.add('hidden');
         }
@@ -404,8 +450,13 @@
                 });
                 
                 els.videoPreview.srcObject = stream;
-                els.liveContainer.classList.remove('hidden');
-                els.btnRecord.classList.remove('hidden');
+                
+                // Hanya tampilkan container jika belum ada rekaman yang sedang diputar
+                if (!recordings[currentIndex]) {
+                    els.liveContainer.classList.remove('hidden');
+                    els.btnRecord.classList.remove('hidden');
+                }
+                
                 els.btnToggleRig.classList.remove('hidden');
                 
                 // FIXED: Pastikan ukuran canvas diupdate saat video load
@@ -428,7 +479,8 @@
 
         // AI Loop
         async function predictLoop() {
-            if (stream && isRigging && els.videoPreview.readyState >= 2) {
+            // Hanya prediksi jika live container terlihat (tidak sedang memutar video hasil)
+            if (stream && isRigging && els.videoPreview.readyState >= 2 && !els.liveContainer.classList.contains('hidden')) {
                 try {
                     await hands.send({image: els.videoPreview});
                 } catch(e) { 
@@ -480,7 +532,17 @@
 
             mediaRecorder.ondataavailable = e => { if(e.data.size > 0) recordedChunks.push(e.data); };
             mediaRecorder.onstop = () => {
+                // Clear timeout jika user stop manual
+                if (recordingTimeout) clearTimeout(recordingTimeout);
+                
+                // Hide Progress Bar
+                els.limitProgressContainer.classList.add('hidden');
+                els.limitProgressBar.classList.remove('limit-bar'); // Reset animation
+
                 videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                // Simpan rekaman ke memori
+                recordings[currentIndex] = videoBlob;
+                
                 const url = URL.createObjectURL(videoBlob);
                 
                 // Show Result
@@ -495,13 +557,30 @@
             };
 
             mediaRecorder.start();
+            
+            // SETUP 5 SECOND LIMIT
+            els.limitProgressContainer.classList.remove('hidden');
+            void els.limitProgressBar.offsetWidth; // Trigger reflow to restart animation
+            els.limitProgressBar.classList.add('limit-bar');
+
+            recordingTimeout = setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            }, 5000); // 5 Detik
+
             els.btnRecord.classList.add('hidden');
             els.btnStop.classList.remove('hidden');
             els.recIndicator.classList.remove('hidden');
         });
 
         els.btnStop.addEventListener('click', () => mediaRecorder.stop());
-        els.btnRetry.addEventListener('click', resetRecordingState);
+        
+        els.btnRetry.addEventListener('click', () => {
+            // Hapus rekaman dari memori jika user ingin mengulang
+            delete recordings[currentIndex];
+            resetRecordingState();
+        });
 
         // --- UPLOAD ---
         els.btnUpload.addEventListener('click', async () => {
@@ -541,7 +620,7 @@
 
                 // Success logic
                 btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> Terkirim!`;
-                btn.classList.replace('bg-green-600', 'bg-green-500');
+                btn.classList.replace('bg-emerald-400', 'bg-emerald-500');
                 lucide.createIcons();
 
                 setTimeout(() => {
@@ -549,7 +628,7 @@
                         loadWord(currentIndex + 1);
                         // Reset button style
                         btn.innerHTML = originalContent;
-                        btn.classList.replace('bg-green-500', 'bg-green-600');
+                        btn.classList.replace('bg-emerald-500', 'bg-emerald-400');
                         btn.disabled = false;
                     } else {
                         showCompleted();
