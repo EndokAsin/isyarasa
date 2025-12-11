@@ -1,0 +1,512 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { 
+  Camera, 
+  Square, 
+  UploadCloud, 
+  CheckCircle2, 
+  RefreshCcw, 
+  Video, 
+  User, 
+  Type,
+  AlertCircle,
+  Loader2,
+  ScanFace,
+  ArrowRight,
+  Play,
+  SkipForward,
+  Trophy
+} from 'lucide-react';
+
+// --- DATA TARGET (URUTAN PEREKAMAN) ---
+const TARGET_WORDS = [
+  { label: "Iya", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/iya.mp4" },
+  { label: "Maaf", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/Maaf.mp4" },
+  { label: "Mau", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/mau.mp4" },
+  { label: "Nama", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/Nama.mp4" },
+  { label: "Perkenalkan", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/Perkenalkan.mp4" },
+  { label: "Salam Kenal", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/Salamkenal.mp4" },
+  { label: "Sama-sama", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/sama-sama.mp4" },
+  { label: "Terima Kasih", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/Terimakasih.mp4" },
+  { label: "Tidak", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/tidak.mp4" },
+  { label: "Tolong", url: "https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/tolong.mp4" }
+];
+
+// --- KONFIGURASI SUPABASE ---
+const SUPABASE_URL = "https://ndkqyftbtzmrzjlcoulz.supabase.co";
+const SUPABASE_KEY = "sb_publishable__aO8IFA_UUmagkK30qhN6w_zU-IHOgv";
+
+export default function App() {
+  // --- STATE ALUR APLIKASI ---
+  const [appStep, setAppStep] = useState('intro'); // 'intro' | 'recording' | 'completed'
+  const [currentIndex, setCurrentIndex] = useState(0); // Indeks kata yang sedang direkam
+  
+  // --- STATE DATA ---
+  const [supabase, setSupabase] = useState(null);
+  const [isSupabaseReady, setIsSupabaseReady] = useState(false);
+  const [contributor, setContributor] = useState('');
+  
+  // --- STATE PEREKAMAN ---
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedChunks, setRecordedChunks] = useState([]);
+  const [videoBlob, setVideoBlob] = useState(null);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [status, setStatus] = useState('idle'); // 'idle' | 'success' | 'error'
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showGuide, setShowGuide] = useState(true);
+
+  // --- REFS ---
+  const mediaRecorderRef = useRef(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const refVideoPlayerRef = useRef(null);
+
+  // --- INIT SUPABASE ---
+  useEffect(() => {
+    if (window.supabase) {
+      const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      setSupabase(client);
+      setIsSupabaseReady(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    script.async = true;
+    script.onload = () => {
+      if (window.supabase) {
+        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        setSupabase(client);
+        setIsSupabaseReady(true);
+      }
+    };
+    document.body.appendChild(script);
+    return () => { if (document.body.contains(script)) document.body.removeChild(script); };
+  }, []);
+
+  // --- ALUR: NEXT WORD LOGIC ---
+  const handleNextWord = useCallback(() => {
+    // Reset state perekaman
+    setVideoBlob(null);
+    setVideoUrl(null);
+    setRecordedChunks([]);
+    setStatus('idle');
+    setErrorMessage('');
+
+    // Cek apakah masih ada kata berikutnya
+    if (currentIndex < TARGET_WORDS.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    } else {
+      stopCamera();
+      setAppStep('completed');
+    }
+  }, [currentIndex]);
+
+  const handleStartSession = () => {
+    if (!contributor.trim()) {
+      setErrorMessage("Mohon isi nama Anda terlebih dahulu.");
+      return;
+    }
+    setErrorMessage('');
+    setAppStep('recording');
+    setCurrentIndex(0);
+    // Auto start camera when entering recording mode
+    setTimeout(startCamera, 500);
+  };
+
+  // --- KAMERA LOGIC ---
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }, 
+        audio: false
+      });
+      if (videoRef.current) videoRef.current.srcObject = stream;
+      streamRef.current = stream;
+      setErrorMessage('');
+    } catch (err) {
+      setErrorMessage('Gagal mengakses kamera. Pastikan izin diberikan.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) videoRef.current.srcObject = null;
+  };
+
+  // --- REKAMAN LOGIC (DENGAN KOMPRESI) ---
+  const startRecording = useCallback(() => {
+    if (!streamRef.current) {
+      startCamera().then(() => setTimeout(initRecorder, 1000));
+    } else {
+      initRecorder();
+    }
+  }, []);
+
+  const initRecorder = () => {
+    setRecordedChunks([]);
+    setVideoBlob(null);
+    setVideoUrl(null);
+    setStatus('idle');
+
+    // Setting bitrate rendah agar ukuran file kecil
+    const options = { 
+      mimeType: 'video/webm;codecs=vp9',
+      videoBitsPerSecond: 500000 // 500 Kbps (Cukup untuk gerakan tangan)
+    };
+    
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+      delete options.mimeType; // Fallback ke default
+    }
+
+    try {
+      const mediaRecorder = new MediaRecorder(streamRef.current, options);
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) setRecordedChunks((prev) => [...prev, event.data]);
+      };
+      mediaRecorder.start();
+      setIsRecording(true);
+      mediaRecorderRef.current = mediaRecorder;
+    } catch (err) {
+      setErrorMessage('Browser tidak mendukung perekaman.');
+    }
+  };
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isRecording && recordedChunks.length > 0) {
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      setVideoBlob(blob);
+      setVideoUrl(URL.createObjectURL(blob));
+    }
+  }, [isRecording, recordedChunks]);
+
+  const resetRecording = () => {
+    setVideoBlob(null);
+    setVideoUrl(null);
+    setRecordedChunks([]);
+    setStatus('idle');
+    // Pastikan preview kamera jalan lagi
+    if (videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  };
+
+  // --- UPLOAD LOGIC ---
+  const handleUpload = async () => {
+    if (!supabase || !videoBlob) return;
+
+    setUploading(true);
+    setErrorMessage('');
+    
+    const currentWord = TARGET_WORDS[currentIndex];
+
+    try {
+      // Struktur folder: Label/Timestamp.webm
+      const timestamp = Date.now();
+      const filename = `${currentWord.label}/${timestamp}.webm`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('dataset-videos')
+        .upload(filename, videoBlob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('dataset-videos')
+        .getPublicUrl(filename);
+
+      const { error: dbError } = await supabase
+        .from('datasets')
+        .insert([{
+          label: currentWord.label,
+          contributor_name: contributor,
+          video_url: publicUrlData.publicUrl,
+          status: 'pending'
+        }]);
+
+      if (dbError) throw dbError;
+
+      setStatus('success');
+      // Delay sedikit sebelum pindah ke kata berikutnya agar user lihat suksesnya
+      setTimeout(() => {
+        handleNextWord();
+      }, 1500);
+
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(`Gagal upload: ${error.message}`);
+      setStatus('error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // --- RENDER SECTIONS ---
+
+  // 1. Loading Initial
+  if (!isSupabaseReady) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mb-4" />
+        <p className="text-slate-500">Memuat Sistem...</p>
+      </div>
+    );
+  }
+
+  // 2. Intro Screen (Isi Nama)
+  if (appStep === 'intro') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center space-y-6">
+          <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <Video className="w-10 h-10 text-indigo-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Isyarasa Collector</h1>
+            <p className="text-slate-500 mt-2">Bantu kami mengumpulkan data gerakan bahasa isyarat untuk AI.</p>
+          </div>
+          
+          <div className="text-left space-y-2">
+            <label className="text-sm font-semibold text-slate-700">Siapa Nama Anda?</label>
+            <input 
+              type="text" 
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+              placeholder="Masukkan nama atau inisial"
+              value={contributor}
+              onChange={(e) => setContributor(e.target.value)}
+            />
+            {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+          </div>
+
+          <button 
+            onClick={handleStartSession}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition flex items-center justify-center"
+          >
+            Mulai Kontribusi <ArrowRight className="w-5 h-5 ml-2" />
+          </button>
+          
+          <p className="text-xs text-slate-400">
+            Anda akan diminta melakukan 10 gerakan sederhana.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Completed Screen
+  if (appStep === 'completed') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center space-y-6 animate-in zoom-in duration-300">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <Trophy className="w-10 h-10 text-green-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Selesai! Terima Kasih</h1>
+            <p className="text-slate-500 mt-2">
+              Luar biasa, <strong>{contributor}</strong>! Anda telah menyelesaikan seluruh rangkaian gerakan. Data Anda sangat berharga bagi kami.
+            </p>
+          </div>
+          
+          <button 
+            onClick={() => setAppStep('intro')}
+            className="w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-3 rounded-lg transition"
+          >
+            Kembali ke Halaman Utama
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Main Recording Screen
+  const currentTarget = TARGET_WORDS[currentIndex];
+  const progressPercent = ((currentIndex) / TARGET_WORDS.length) * 100;
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-10">
+      
+      {/* Top Bar Progress */}
+      <div className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="h-1 bg-slate-200 w-full">
+          <div className="h-full bg-indigo-600 transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+        </div>
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center space-x-2 text-sm font-medium text-slate-500">
+            <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">
+              {currentIndex + 1} / {TARGET_WORDS.length}
+            </span>
+            <span>Target: <strong className="text-slate-800 text-lg ml-1">{currentTarget.label}</strong></span>
+          </div>
+          <button 
+            onClick={handleNextWord} 
+            className="text-xs text-slate-400 hover:text-slate-600 flex items-center"
+          >
+            Lewati <SkipForward className="w-3 h-3 ml-1" />
+          </button>
+        </div>
+      </div>
+
+      <main className="container mx-auto px-4 py-6 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* LEFT: REFERENCE VIDEO */}
+          <div className="space-y-4">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+              <h3 className="font-bold text-slate-700 mb-2 flex items-center">
+                <Play className="w-4 h-4 mr-2 text-indigo-500" /> Contoh Gerakan: "{currentTarget.label}"
+              </h3>
+              <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+                <video 
+                  key={currentTarget.url} // Key change forces reload on new url
+                  src={currentTarget.url} 
+                  autoPlay loop muted playsInline 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <p className="text-sm text-slate-500 mt-2 bg-yellow-50 p-2 rounded border border-yellow-100">
+                💡 Tiru gerakan di atas. Pastikan tangan terlihat jelas.
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT: CAMERA & RECORDING */}
+          <div className="space-y-4">
+            <div className="bg-white p-4 rounded-xl shadow-md border border-slate-200 relative">
+              
+              {/* Camera Header */}
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-bold text-slate-700 flex items-center">
+                  <Camera className="w-4 h-4 mr-2 text-red-500" /> Kamera Anda
+                </h3>
+                {streamRef.current && !videoUrl && (
+                  <button onClick={() => setShowGuide(!showGuide)} className="text-xs text-indigo-600 hover:underline">
+                    {showGuide ? 'Sembunyikan' : 'Tampilkan'} Garis Bantu
+                  </button>
+                )}
+              </div>
+
+              {/* Viewport */}
+              <div className="relative aspect-video bg-black rounded-lg overflow-hidden group">
+                
+                {/* 1. Tombol Nyalakan Kamera (Jika belum nyala) */}
+                {!streamRef.current && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-30">
+                     <button onClick={startCamera} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full backdrop-blur-sm border border-white/20 transition">
+                       Nyalakan Kamera
+                     </button>
+                  </div>
+                )}
+
+                {/* 2. Live Preview */}
+                <video
+                  ref={videoRef}
+                  autoPlay muted playsInline
+                  className={`w-full h-full object-cover transform scale-x-[-1] ${!streamRef.current || videoUrl ? 'hidden' : 'block'}`}
+                />
+
+                {/* 3. Guide Overlay */}
+                {streamRef.current && !videoUrl && showGuide && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-50">
+                     <div className="border-4 border-dashed border-white/70 rounded-3xl w-2/3 h-5/6 relative">
+                        <div className="absolute top-0 left-0 right-0 text-center -mt-8">
+                          <span className="bg-black/50 text-white text-[10px] px-2 py-1 rounded">Area Tangan</span>
+                        </div>
+                     </div>
+                  </div>
+                )}
+
+                {/* 4. Playback Result */}
+                {videoUrl && (
+                  <video src={videoUrl} controls className="w-full h-full object-contain bg-black z-20" />
+                )}
+
+                {/* 5. Recording Indicator */}
+                {isRecording && (
+                  <div className="absolute top-4 right-4 flex items-center bg-red-600 text-white px-3 py-1 rounded-full animate-pulse text-xs font-bold z-40">
+                    <div className="w-2 h-2 bg-white rounded-full mr-2"></div> REC
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-4 flex gap-3">
+                {/* STATE: READY TO RECORD */}
+                {!isRecording && !videoUrl && (
+                  <button 
+                    onClick={startRecording}
+                    disabled={!streamRef.current}
+                    className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-slate-300 text-white py-3 rounded-lg font-bold shadow transition flex items-center justify-center"
+                  >
+                    <div className="w-3 h-3 bg-white rounded-full mr-2"></div> Rekam
+                  </button>
+                )}
+
+                {/* STATE: RECORDING */}
+                {isRecording && (
+                  <button 
+                    onClick={stopRecording}
+                    className="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-lg font-bold shadow transition flex items-center justify-center"
+                  >
+                    <Square className="w-4 h-4 mr-2 fill-current" /> Stop
+                  </button>
+                )}
+
+                {/* STATE: REVIEW & UPLOAD */}
+                {videoUrl && (
+                  <>
+                    <button 
+                      onClick={resetRecording}
+                      disabled={uploading || status === 'success'}
+                      className="flex-1 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-3 rounded-lg font-bold transition"
+                    >
+                      <RefreshCcw className="w-4 h-4 mx-auto" />
+                    </button>
+                    
+                    <button 
+                      onClick={handleUpload}
+                      disabled={uploading || status === 'success'}
+                      className={`flex-[3] text-white py-3 rounded-lg font-bold shadow transition flex items-center justify-center ${
+                         status === 'success' ? 'bg-green-500' : 'bg-green-600 hover:bg-green-700'
+                      }`}
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Mengirim...
+                        </>
+                      ) : status === 'success' ? (
+                        <>
+                          <CheckCircle2 className="w-5 h-5 mr-2" /> Terkirim!
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud className="w-5 h-5 mr-2" /> Lanjut ({currentIndex + 2}/{TARGET_WORDS.length})
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
+              
+              {errorMessage && (
+                 <div className="mt-2 text-center text-xs text-red-500 bg-red-50 p-2 rounded">
+                   {errorMessage}
+                 </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
