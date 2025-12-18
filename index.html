@@ -12,9 +12,9 @@
     <!-- 2. Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- 3. MediaPipe (VERSI STABIL DIKUNCI) -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" crossorigin="anonymous"></script>
+    <!-- 3. MediaPipe (Versi Stabil) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -22,18 +22,16 @@
         .scale-x-flipped { transform: scaleX(-1); }
         .hidden { display: none !important; }
         
-        /* Loader warna Hijau Pastel */
         .loader {
             border: 3px solid #f3f3f3;
             border-radius: 50%;
-            border-top: 3px solid #34d399; /* Emerald-400 (Pastel Green) */
+            border-top: 3px solid #34d399;
             width: 20px;
             height: 20px;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Progress bar animasi untuk limit 5 detik */
         @keyframes shrink { from { width: 100%; } to { width: 0%; } }
         .limit-bar { animation: shrink 5s linear forwards; }
     </style>
@@ -49,19 +47,15 @@
     <!-- SCREEN 2: INTRO (NAMA) -->
     <div id="screen-intro" class="hidden fixed inset-0 bg-slate-50 flex items-center justify-center z-40 p-4">
         <div class="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center space-y-6">
-            
-            <!-- LOGO UTAMA -->
             <div class="w-32 h-32 mx-auto mb-2 flex items-center justify-center">
                 <img src="https://ndkqyftbtzmrzjlcoulz.supabase.co/storage/v1/object/public/assets/logo%20(1).png" 
                      alt="Logo Isyarasa" 
                      class="w-full h-full object-contain">
             </div>
-
             <div>
                 <h1 class="text-3xl font-bold text-slate-800">Isyarasa by Sankara</h1>
-                <p class="text-slate-500 mt-2">Mohon bantuan Anda untuk berpartisipasi dalam pengumpulan data gerakan bahasa isyarat.</p>
+                <p class="text-slate-500 mt-2">Bantu kami mengumpulkan data gerakan bahasa isyarat untuk pengembangan AI.</p>
             </div>
-            
             <div class="text-left space-y-2">
                 <label class="text-sm font-semibold text-slate-700">Siapa Nama Anda?</label>
                 <input type="text" id="input-contributor" 
@@ -69,13 +63,9 @@
                     placeholder="Masukkan nama atau inisial">
                 <p id="intro-error" class="text-red-500 text-sm hidden"></p>
             </div>
-
-            <!-- Tombol Hijau Pastel (Emerald-400) -->
             <button id="btn-start-session" class="w-full bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition flex items-center justify-center shadow-lg shadow-emerald-100">
                 Mulai Kontribusi <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
             </button>
-            
-            <!-- STATUS AI DIHILANGKAN DARI SINI SESUAI PERMINTAAN -->
         </div>
     </div>
 
@@ -97,18 +87,15 @@
         </div>
     </div>
 
-    <!-- SCREEN 4: MAIN RECORDING (App UI) -->
+    <!-- SCREEN 4: MAIN RECORDING -->
     <div id="screen-main" class="hidden flex-1 flex flex-col">
-        
-        <!-- Top Progress Bar -->
         <div class="bg-white shadow-sm sticky top-0 z-30">
             <div class="h-1 bg-slate-200 w-full">
-                <!-- Progress Bar Hijau Pastel -->
                 <div id="progress-bar" class="h-full bg-emerald-400 transition-all duration-500" style="width: 0%"></div>
             </div>
             <div class="container mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center">
-                    <button id="btn-prev-word" class="hidden mr-3 p-1 rounded-full hover:bg-slate-100 text-slate-500 transition" title="Kembali">
+                    <button id="btn-prev-word" class="hidden mr-3 p-1 rounded-full hover:bg-slate-100 text-slate-500 transition">
                         <i data-lucide="chevron-left" class="w-5 h-5"></i>
                     </button>
                     <div class="flex flex-col md:flex-row md:items-center text-sm">
@@ -124,107 +111,80 @@
 
         <main class="container mx-auto px-4 py-6 max-w-5xl flex-1">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-                
-                <!-- LEFT: REFERENCE VIDEO -->
+                <!-- LEFT: EXAMPLE -->
                 <div class="space-y-4 flex flex-col">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 h-full flex flex-col">
                         <h3 class="font-bold text-slate-700 mb-2 flex items-center">
-                            <!-- Icon Hijau Pastel -->
                             <i data-lucide="play" class="w-4 h-4 mr-2 text-emerald-500"></i> Contoh Gerakan
                         </h3>
-                        <div class="relative aspect-video bg-black rounded-lg overflow-hidden flex-1 group">
+                        <div class="relative aspect-video bg-black rounded-lg overflow-hidden flex-1">
                             <video id="video-reference" class="w-full h-full object-contain" autoplay loop muted playsinline></video>
                         </div>
                         <p class="text-sm text-slate-500 mt-3 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
-                            💡 <strong>Tips:</strong> Tiru gerakan di video. Pastikan tangan terlihat jelas.
+                            💡 <strong>Tips:</strong> Tiru gerakan di video. Pastikan tangan terlihat jelas di kamera.
                         </p>
                     </div>
                 </div>
 
-                <!-- RIGHT: CAMERA & RECORDING -->
+                <!-- RIGHT: CAMERA -->
                 <div class="space-y-4 flex flex-col">
                     <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200 relative flex-1 flex flex-col">
-                        
-                        <!-- Header -->
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="font-bold text-slate-700 flex items-center">
                                 <i data-lucide="camera" class="w-4 h-4 mr-2 text-red-500"></i> Kamera Anda
                             </h3>
-                            <!-- Link Hijau Pastel -->
                             <button id="btn-toggle-rig" class="hidden text-xs text-emerald-500 hover:underline flex items-center">
                                 <i data-lucide="scan-face" class="w-3 h-3 mr-1"></i>
                                 <span id="rig-text">Sembunyikan Rig</span>
                             </button>
                         </div>
 
-                        <!-- Viewport -->
-                        <div class="relative aspect-video bg-black rounded-lg overflow-hidden group w-full">
-                            
-                            <!-- 1. Tombol Nyalakan Kamera -->
+                        <div class="relative aspect-video bg-black rounded-lg overflow-hidden w-full">
                             <div id="camera-overlay" class="absolute inset-0 flex items-center justify-center bg-slate-900 z-30">
                                 <button id="btn-enable-cam" class="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full backdrop-blur-sm border border-white/20 transition flex items-center">
                                     <i data-lucide="camera" class="w-5 h-5 mr-2"></i> Nyalakan Kamera
                                 </button>
                             </div>
 
-                            <!-- 2. Live Preview + Canvas -->
                             <div id="live-container" class="relative w-full h-full transform scale-x-flipped hidden">
                                 <video id="video-preview" class="absolute inset-0 w-full h-full object-cover" autoplay muted playsinline></video>
                                 <canvas id="canvas-rig" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
                                 
-                                <!-- Progress Bar 5 Detik -->
                                 <div id="limit-progress-container" class="hidden absolute top-0 left-0 w-full h-1 bg-white/30 z-50">
                                     <div id="limit-progress-bar" class="h-full bg-red-500 w-full"></div>
                                 </div>
                             </div>
 
-                            <!-- 3. Playback Result -->
                             <video id="video-playback" class="absolute inset-0 w-full h-full object-contain bg-black z-20 hidden" controls></video>
 
-                            <!-- 4. Rec Indicator -->
                             <div id="rec-indicator" class="hidden absolute top-4 right-4 flex items-center bg-red-600 text-white px-3 py-1 rounded-full animate-pulse text-xs font-bold z-40">
                                 <div class="w-2 h-2 bg-white rounded-full mr-2"></div> REC
                             </div>
-                            
-                            <!-- 5. Loading AI Label -->
-                            <div id="ai-loading-label" class="hidden absolute bottom-4 left-4 bg-black/50 text-white text-xs px-2 py-1 rounded z-30">
-                                Memuat AI...
-                            </div>
                         </div>
 
-                        <!-- Controls -->
                         <div class="mt-4 flex gap-3">
-                            <!-- RECORD BTN -->
                             <button id="btn-record" class="hidden flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold shadow transition flex items-center justify-center">
                                 <div class="w-3 h-3 bg-white rounded-full mr-2"></div> Rekam (Maks 5 Detik)
                             </button>
-
-                            <!-- STOP BTN -->
                             <button id="btn-stop" class="hidden flex-1 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-lg font-bold shadow transition flex items-center justify-center">
                                 <i data-lucide="square" class="w-4 h-4 mr-2 fill-current"></i> Stop
                             </button>
-
-                            <!-- REVIEW ACTIONS -->
                             <div id="review-actions" class="hidden w-full flex gap-3">
                                 <button id="btn-retry" class="flex-1 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-3 rounded-lg font-bold transition flex items-center justify-center">
                                     <i data-lucide="refresh-ccw" class="w-4 h-4 mr-2"></i> Ulang
                                 </button>
-                                <!-- Tombol Lanjut Hijau Pastel -->
                                 <button id="btn-upload" class="flex-[3] bg-emerald-400 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold shadow transition flex items-center justify-center">
                                     <i data-lucide="upload-cloud" class="w-4 h-4 mr-2"></i> Lanjut
                                 </button>
                             </div>
                         </div>
-
                         <p id="error-message" class="text-red-500 text-xs text-center mt-2 hidden"></p>
-
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- SCRIPT LOGIC -->
     <script>
         // --- DATA ---
         const TARGET_WORDS = [
@@ -243,163 +203,112 @@
         const SUPABASE_URL = "https://ndkqyftbtzmrzjlcoulz.supabase.co";
         const SUPABASE_KEY = "sb_publishable__aO8IFA_UUmagkK30qhN6w_zU-IHOgv";
 
-        // --- GLOBAL VARIABLES ---
-        let supabase = null;
+        // --- GLOBAL ---
+        let supabaseClient = null; // Renamed from 'supabase' to avoid collision with library
+        let hands = null;
         let currentIndex = 0;
         let contributorName = "";
-        
-        // Simpan rekaman per kata
-        let recordings = {}; 
-
         let stream = null;
         let mediaRecorder = null;
         let recordedChunks = [];
         let videoBlob = null;
-        let recordingTimeout = null; // Timeout untuk 5 detik
-        
-        let hands = null; // MediaPipe Hands
         let isRigging = true;
-        let isAiReady = false;
+        let recordingTimeout = null;
 
-        // --- DOM ELEMENTS ---
         const screens = {
             loading: document.getElementById('screen-loading'),
             intro: document.getElementById('screen-intro'),
             main: document.getElementById('screen-main'),
             completed: document.getElementById('screen-completed')
         };
-        
+
         const els = {
             inputName: document.getElementById('input-contributor'),
             introError: document.getElementById('intro-error'),
-            // aiStatus REMOVED (Sudah dihapus dari HTML)
-            
             progressBar: document.getElementById('progress-bar'),
             stepCounter: document.getElementById('step-counter'),
             targetLabel: document.getElementById('current-target-label'),
             videoRef: document.getElementById('video-reference'),
-            
             btnEnableCam: document.getElementById('btn-enable-cam'),
             camOverlay: document.getElementById('camera-overlay'),
             liveContainer: document.getElementById('live-container'),
             videoPreview: document.getElementById('video-preview'),
             canvasRig: document.getElementById('canvas-rig'),
             videoPlayback: document.getElementById('video-playback'),
-            
             recIndicator: document.getElementById('rec-indicator'),
-            aiLoading: document.getElementById('ai-loading-label'),
             limitProgressContainer: document.getElementById('limit-progress-container'),
             limitProgressBar: document.getElementById('limit-progress-bar'),
-
             btnToggleRig: document.getElementById('btn-toggle-rig'),
             rigText: document.getElementById('rig-text'),
-            
             btnRecord: document.getElementById('btn-record'),
             btnStop: document.getElementById('btn-stop'),
             reviewActions: document.getElementById('review-actions'),
             btnRetry: document.getElementById('btn-retry'),
             btnUpload: document.getElementById('btn-upload'),
-            
             btnPrev: document.getElementById('btn-prev-word'),
             btnSkip: document.getElementById('btn-skip-word'),
             errorMsg: document.getElementById('error-message')
         };
 
-        // --- INITIALIZATION ---
+        function showScreen(name) {
+            Object.values(screens).forEach(el => el.classList.add('hidden'));
+            if (screens[name]) screens[name].classList.remove('hidden');
+        }
+
         window.onload = async () => {
             lucide.createIcons();
             
+            // Langsung munculkan intro agar tidak stuck loading
+            showScreen('intro');
+
             // 1. Init Supabase
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            } else {
-                alert("Gagal memuat Supabase.");
-            }
+            try {
+                if (window.supabase) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
+            } catch (e) { console.error("Supabase fail", e); }
 
             // 2. Init MediaPipe
             try {
-                // FIXED: Menggunakan versi spesifik 0.4.x agar kompatibel
-                hands = new Hands({
-                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`
-                });
-                
-                hands.setOptions({
-                    maxNumHands: 2,
-                    modelComplexity: 0, // UBAH KE 0 (LITE) AGAR LEBIH CEPAT DI BROWSER/HP
-                    minDetectionConfidence: 0.5,
-                    minTrackingConfidence: 0.5
-                });
-                
-                hands.onResults(onResults);
-                isAiReady = true;
-                // UI update untuk AI Status dihapus
-            } catch (err) {
-                console.error("MediaPipe Error:", err);
-            }
-
-            // Show Intro
-            showScreen('intro');
+                if (window.Hands) {
+                    hands = new window.Hands({
+                        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                    });
+                    hands.setOptions({
+                        maxNumHands: 2,
+                        modelComplexity: 1,
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+                    hands.onResults(onResults);
+                }
+            } catch (err) { console.error("MediaPipe Error:", err); }
         };
 
-        function showScreen(name) {
-            Object.values(screens).forEach(el => el.classList.add('hidden'));
-            screens[name].classList.remove('hidden');
-        }
-
-        // --- INTRO FLOW ---
         document.getElementById('btn-start-session').addEventListener('click', () => {
             const name = els.inputName.value.trim();
             if (!name) {
-                els.introError.innerText = "Mohon isi nama Anda terlebih dahulu.";
+                els.introError.innerText = "Mohon isi nama Anda.";
                 els.introError.classList.remove('hidden');
                 return;
             }
             contributorName = name;
             showScreen('main');
             loadWord(0);
-            
-            // Auto start camera logic
-            setTimeout(() => {
-                if(!stream) startCamera();
-            }, 500);
         });
 
-        // --- WORD NAVIGATION ---
         function loadWord(index) {
             currentIndex = index;
             const word = TARGET_WORDS[index];
+            const percent = (index / TARGET_WORDS.length) * 100;
             
-            // Update UI Stats
-            const percent = ((index) / TARGET_WORDS.length) * 100;
             els.progressBar.style.width = `${percent}%`;
             els.stepCounter.innerText = `Kata ${index + 1} dari ${TARGET_WORDS.length}:`;
             els.targetLabel.innerText = word.label;
-            
-            // Update Reference Video
             els.videoRef.src = word.url;
             
-            // Cek apakah sudah ada rekaman untuk kata ini
-            if (recordings[index]) {
-                // Tampilkan video yang tersimpan
-                videoBlob = recordings[index];
-                const url = URL.createObjectURL(videoBlob);
-                
-                els.liveContainer.classList.add('hidden');
-                els.videoPlayback.src = url;
-                els.videoPlayback.classList.remove('hidden');
-                
-                // Atur tombol ke mode review
-                els.recIndicator.classList.add('hidden');
-                els.btnStop.classList.add('hidden');
-                els.btnRecord.classList.add('hidden'); // Sembunyikan tombol rekam
-                els.reviewActions.classList.remove('hidden');
-                els.camOverlay.classList.add('hidden');
-            } else {
-                // Belum ada rekaman, reset ke mode kamera
-                resetRecordingState();
-            }
+            resetRecordingState();
             
-            // Handle Nav Buttons
             if (index > 0) els.btnPrev.classList.remove('hidden');
             else els.btnPrev.classList.add('hidden');
         }
@@ -407,10 +316,12 @@
         function resetRecordingState() {
             videoBlob = null;
             recordedChunks = [];
-            
-            // Hide Playback, Show Live
             els.videoPlayback.classList.add('hidden');
             els.videoPlayback.src = "";
+            els.reviewActions.classList.add('hidden');
+            els.btnStop.classList.add('hidden');
+            els.recIndicator.classList.add('hidden');
+            els.errorMsg.classList.add('hidden');
             
             if (stream) {
                 els.liveContainer.classList.remove('hidden');
@@ -418,76 +329,35 @@
             } else {
                 els.camOverlay.classList.remove('hidden');
             }
-            
-            els.reviewActions.classList.add('hidden');
-            els.btnStop.classList.add('hidden');
-            els.recIndicator.classList.add('hidden');
-            els.errorMsg.classList.add('hidden');
         }
 
-        els.btnPrev.addEventListener('click', () => {
-            if(currentIndex > 0) loadWord(currentIndex - 1);
-        });
-        
-        els.btnSkip.addEventListener('click', () => {
-            if(currentIndex < TARGET_WORDS.length - 1) loadWord(currentIndex + 1);
-            else showCompleted();
-        });
-
-        // --- CAMERA & AI ---
         async function startCamera() {
             try {
-                els.camOverlay.classList.add('hidden');
                 stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { width: {ideal: 1280}, height: {ideal: 720}, facingMode: 'user' }, 
-                    audio: false 
+                    video: { width: 1280, height: 720, facingMode: 'user' } 
                 });
-                
                 els.videoPreview.srcObject = stream;
-                
-                // Hanya tampilkan container jika belum ada rekaman yang sedang diputar
-                if (!recordings[currentIndex]) {
-                    els.liveContainer.classList.remove('hidden');
-                    els.btnRecord.classList.remove('hidden');
-                }
-                
+                els.camOverlay.classList.add('hidden');
+                els.liveContainer.classList.remove('hidden');
+                els.btnRecord.classList.remove('hidden');
                 els.btnToggleRig.classList.remove('hidden');
                 
-                // FIXED: Pastikan ukuran canvas diupdate saat video load
                 els.videoPreview.onloadedmetadata = () => {
-                    els.videoPreview.play();
-                    // Set canvas size sama dengan video source actual
                     els.canvasRig.width = els.videoPreview.videoWidth;
                     els.canvasRig.height = els.videoPreview.videoHeight;
                     predictLoop();
                 };
-
             } catch (err) {
-                console.error(err);
-                alert("Gagal akses kamera: " + err.message);
-                els.camOverlay.classList.remove('hidden');
+                alert("Kamera diblokir atau tidak tersedia.");
             }
         }
 
         els.btnEnableCam.addEventListener('click', startCamera);
 
-        // AI Loop (OPTIMIZED)
-        let isProcessingAi = false;
-
         async function predictLoop() {
-            // Hanya prediksi jika live container terlihat dan tidak sedang memproses frame sebelumnya
-            if (stream && isRigging && els.videoPreview.readyState >= 2 && !els.liveContainer.classList.contains('hidden')) {
-                if (!isProcessingAi) {
-                    isProcessingAi = true;
-                    try {
-                        await hands.send({image: els.videoPreview});
-                    } catch(e) { 
-                        // Silent catch
-                    }
-                    isProcessingAi = false;
-                }
+            if (stream && isRigging && hands && els.videoPreview.readyState >= 2 && !els.liveContainer.classList.contains('hidden')) {
+                try { await hands.send({image: els.videoPreview}); } catch(e) {}
             }
-            // Loop terus berjalan
             requestAnimationFrame(predictLoop);
         }
 
@@ -495,167 +365,100 @@
             const ctx = els.canvasRig.getContext('2d');
             ctx.save();
             ctx.clearRect(0, 0, els.canvasRig.width, els.canvasRig.height);
-            
             if (isRigging && results.multiHandLandmarks) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // FIXED: Menggunakan global object dari drawing_utils
-                    if (window.drawConnectors && window.HAND_CONNECTIONS) {
-                        drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
-                    }
-                    if (window.drawLandmarks) {
-                        drawLandmarks(ctx, landmarks, {color: '#FF0000', lineWidth: 1, radius: 3});
-                    }
+                    drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {color: '#34d399', lineWidth: 4});
+                    drawLandmarks(ctx, landmarks, {color: '#f87171', lineWidth: 1, radius: 4});
                 }
             }
             ctx.restore();
         }
 
-        els.btnToggleRig.addEventListener('click', () => {
-            isRigging = !isRigging;
-            els.rigText.innerText = isRigging ? "Sembunyikan Rig" : "Tampilkan Rig";
-            if(!isRigging) {
-                const ctx = els.canvasRig.getContext('2d');
-                ctx.clearRect(0, 0, els.canvasRig.width, els.canvasRig.height);
-            }
-        });
-
-        // --- RECORDING ---
         els.btnRecord.addEventListener('click', () => {
             recordedChunks = [];
-            const options = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 500000 };
-            
-            try {
-                mediaRecorder = new MediaRecorder(stream, options);
-            } catch (e) {
-                mediaRecorder = new MediaRecorder(stream);
-            }
-
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
             mediaRecorder.ondataavailable = e => { if(e.data.size > 0) recordedChunks.push(e.data); };
             mediaRecorder.onstop = () => {
-                // Clear timeout jika user stop manual
-                if (recordingTimeout) clearTimeout(recordingTimeout);
-                
-                // Hide Progress Bar
+                clearTimeout(recordingTimeout);
                 els.limitProgressContainer.classList.add('hidden');
-                els.limitProgressBar.classList.remove('limit-bar'); // Reset animation
-
+                els.limitProgressBar.classList.remove('limit-bar');
                 videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-                // Simpan rekaman ke memori
-                recordings[currentIndex] = videoBlob;
-                
                 const url = URL.createObjectURL(videoBlob);
-                
-                // Show Result
                 els.liveContainer.classList.add('hidden');
                 els.videoPlayback.src = url;
                 els.videoPlayback.classList.remove('hidden');
-                
-                // UI
                 els.recIndicator.classList.add('hidden');
                 els.btnStop.classList.add('hidden');
                 els.reviewActions.classList.remove('hidden');
             };
 
             mediaRecorder.start();
-            
-            // SETUP 5 SECOND LIMIT
-            els.limitProgressContainer.classList.remove('hidden');
-            void els.limitProgressBar.offsetWidth; // Trigger reflow to restart animation
-            els.limitProgressBar.classList.add('limit-bar');
-
-            recordingTimeout = setTimeout(() => {
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                }
-            }, 5000); // 5 Detik
-
             els.btnRecord.classList.add('hidden');
             els.btnStop.classList.remove('hidden');
             els.recIndicator.classList.remove('hidden');
+            els.limitProgressContainer.classList.remove('hidden');
+            void els.limitProgressBar.offsetWidth;
+            els.limitProgressBar.classList.add('limit-bar');
+
+            recordingTimeout = setTimeout(() => {
+                if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+            }, 5000);
         });
 
         els.btnStop.addEventListener('click', () => mediaRecorder.stop());
-        
-        els.btnRetry.addEventListener('click', () => {
-            // Hapus rekaman dari memori jika user ingin mengulang
-            delete recordings[currentIndex];
-            resetRecordingState();
-        });
+        els.btnRetry.addEventListener('click', resetRecordingState);
 
-        // --- UPLOAD ---
         els.btnUpload.addEventListener('click', async () => {
-            if (!videoBlob) return;
-            
-            // UI Loading state
+            if (!videoBlob || !supabaseClient) return;
             const btn = els.btnUpload;
-            const originalContent = btn.innerHTML;
-            btn.innerHTML = `<div class="loader mr-2 border-white border-t-transparent w-4 h-4"></div> Mengirim...`;
             btn.disabled = true;
+            btn.innerText = "Mengirim...";
 
-            const currentWord = TARGET_WORDS[currentIndex];
-            
+            const word = TARGET_WORDS[currentIndex].label;
+            const filename = `${word}/${Date.now()}.webm`;
+
             try {
-                const timestamp = Date.now();
-                const filename = `${currentWord.label}/${timestamp}.webm`;
+                const { error: upErr } = await supabaseClient.storage.from('dataset-videos').upload(filename, videoBlob);
+                if (upErr) throw upErr;
 
-                // 1. Upload Storage
-                const { error: uploadError } = await supabase.storage
-                    .from('dataset-videos')
-                    .upload(filename, videoBlob);
-                if (uploadError) throw uploadError;
-
-                // 2. Get URL
-                const { data: publicUrlData } = supabase.storage
-                    .from('dataset-videos')
-                    .getPublicUrl(filename);
-
-                // 3. Insert DB
-                const { error: dbError } = await supabase.from('datasets').insert([{
-                    label: currentWord.label,
+                const { data: urlData } = supabaseClient.storage.from('dataset-videos').getPublicUrl(filename);
+                await supabaseClient.from('datasets').insert([{
+                    label: word,
                     contributor_name: contributorName,
-                    video_url: publicUrlData.publicUrl,
+                    video_url: urlData.publicUrl,
                     status: 'pending'
                 }]);
-                if (dbError) throw dbError;
 
-                // Success logic
-                btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> Terkirim!`;
-                btn.classList.replace('bg-emerald-400', 'bg-emerald-500');
-                lucide.createIcons();
-
+                btn.innerText = "Berhasil!";
                 setTimeout(() => {
-                    if (currentIndex < TARGET_WORDS.length - 1) {
-                        loadWord(currentIndex + 1);
-                        // Reset button style
-                        btn.innerHTML = originalContent;
-                        btn.classList.replace('bg-emerald-500', 'bg-emerald-400');
-                        btn.disabled = false;
-                    } else {
-                        showCompleted();
-                    }
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="upload-cloud" class="w-4 h-4 mr-2"></i> Lanjut`;
+                    if (currentIndex < TARGET_WORDS.length - 1) loadWord(currentIndex + 1);
+                    else showCompleted();
                 }, 1000);
-
             } catch (err) {
-                console.error(err);
-                els.errorMsg.innerText = "Gagal upload: " + err.message;
-                els.errorMsg.classList.remove('hidden');
-                btn.innerHTML = originalContent;
+                alert("Gagal upload ke server.");
                 btn.disabled = false;
+                btn.innerText = "Coba Lagi";
             }
+        });
+
+        els.btnPrev.addEventListener('click', () => { if(currentIndex > 0) loadWord(currentIndex - 1); });
+        els.btnSkip.addEventListener('click', () => {
+            if(currentIndex < TARGET_WORDS.length - 1) loadWord(currentIndex + 1);
+            else showCompleted();
         });
 
         function showCompleted() {
             document.getElementById('completed-name').innerText = contributorName;
-            
-            // Stop Camera
-            if(stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
-            }
-
+            if(stream) stream.getTracks().forEach(t => t.stop());
             showScreen('completed');
         }
 
+        els.btnToggleRig.addEventListener('click', () => {
+            isRigging = !isRigging;
+            els.rigText.innerText = isRigging ? "Sembunyikan Rig" : "Tampilkan Rig";
+        });
     </script>
 </body>
 </html>
